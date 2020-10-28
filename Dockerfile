@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     
 RUN apt-get update && apt-get install -y \
 	python3-opencv ca-certificates wget sudo  \
-	cmake ninja-build protobuf-compiler libprotobuf-dev 
+	cmake ninja-build protobuf-compiler libprotobuf-dev zip
 # RUN ln -sv /usr/bin/python3 /usr/bin/python
 
 # create a non-root user
@@ -64,6 +64,7 @@ ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta
 ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
 
 RUN mkdir /app
+RUN mkdir -p /app/Annotation_images
 COPY source_code /app
 COPY d2sourcecode /app
 

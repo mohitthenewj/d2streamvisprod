@@ -8,6 +8,7 @@ from pull_blob import pull_main
 from ffmpeg_main import pre_process
 from pushjson import push_files
 from oddf import odasdf
+from frames_extract import vid_frames
 import json
 import os
 import numpy as np
@@ -42,15 +43,16 @@ def main_process(basepath = None, video_id=None):
 
     st.subheader("FPS for the trimmed video")
 
-    fps = st.slider("fps for the trimmed video",1,25,1) 
+    fps = st.slider("",value=1.0, min_value=0.0, max_value=4.0, step=0.1) 
 
+    lang = st.selectbox('Choose a language for video id',['Hindi','Marathi', 'Tamil', 'English', 'Kannad'])
 
     if st.button(label = "Process video",key=0):
         try:
             os.system(f'rm {basepath}/*webm')
             os.system(f'rm {basepath}/*json')
             with st.spinner("processing....."):
-                pull_main(video_id=video_id)
+                pull_main(video_id=video_id, lang = lang)
                 # ffmpeg_id = f'{video_id}_'
                 pre_process(video_id = video_id, trim_duration=duration, fps=fps)
 
@@ -61,6 +63,23 @@ def main_process(basepath = None, video_id=None):
             st.success("successfully processed")
         except Exception as e:
             st.exception(f'error during processing video {e}')
+
+    if st.button(label = "Extract frames"):
+        try:
+            zip_name = 'Annotation_images'
+            vid_frames(video_id = video_id, zip_name = zip_name, basepath = basepath)
+
+            zip_path = f'{basepath}/{zip_name}.zip'
+            with open(f'{zip_path}', "rb") as f:
+                bytes = f.read()
+                b64 = base64.b64encode(bytes).decode()
+                href = f'<a href="data:file/zip;base64,{b64}" download=\'{zip_name}.zip\'>\
+                    Click to download\
+                </a>'
+            st.markdown(href, unsafe_allow_html=True)
+        except Exception as e:
+            st.exception(f'Got error during frames extraction > {e}')
+
 
     if st.button(label = "Start OD", key=1):
         try:
@@ -94,6 +113,10 @@ def main_process(basepath = None, video_id=None):
 
 def clean_cache():
     with st.spinner("Cleaning....."):
+        os.system(f'rm {basepath}/*zip')
+        os.system(f'rm -f {basepath}/Annotation_images/*')
+        
+        os.system(f'rm {basepath}/*txt')
         os.system(f'rm {basepath}/*mp4')
         os.system(f'rm {basepath}/*webm')
         os.system(f'rm {basepath}/*json')
